@@ -2,6 +2,7 @@
 import os
 import math
 import numpy as np
+import json
 # %%
 import cv2
 
@@ -11,6 +12,16 @@ import cv2
 import face_recognition
 from PIL import Image, ImageDraw
 
+# %%
+def CalEqualizeHist(image):
+    output_image = cv2.equalizeHist(image)
+    return output_image
+
+# %%
+def CalLaplacian(image):
+    gray_lap = cv2.Laplacian(image,cv2.CV_64F)
+    laplacian = cv2.convertScaleAbs(gray_lap)
+    return laplacian
 # %%
 def JudgeBrightness(image):
 	sum = 0
@@ -28,9 +39,10 @@ def CalGamma(average):
 # %%
 def GammaTransformation(image, gamma):
 	image_cp = np.copy(image)
-	output_imgae = 255 * np.power(image_cp.astype(int) / 255, gamma)
-	return output_imgae
+	output_image = 255 * np.power(image_cp.astype(int) / 255, gamma)
+	return output_image
 
+# %%
 def CalDistance(pointleft, pointright):
     distance = math.pow(math.pow(pointleft[0] - pointright[0], 2) + math.pow(pointleft[1] - pointright[1], 2), 0.5)
     return distance
@@ -101,10 +113,11 @@ def ImageShow(imagefirst):
             imgg.append(CalDistance(line[0], line[1]))
             imgg.append(CalDistance(line2[0], line2[1]))
             imgg.append(CalLeftRight(line[0], line[1]))
-            # print('eye_length:{}'.format(CalDistance(line[0], line[1])))
-            # print('nose_length:{}'.format(CalDistance(line2[0], line2[1])))
-            # print('around:{}'.format(CalLeftRight(line[0], line[1])))
-            imgroup.append(imgg)
+            print('eye_length:{}'.format(CalDistance(line[0], line[1])))
+            print('nose_length:{}'.format(CalDistance(line2[0], line2[1])))
+            print('around:{}'.format(CalLeftRight(line[0], line[1])))
+            imgroup.append({'x':imgg})
+            imgroup.append({'y':1})
         # img = cv2.cvtColor(np.asarray(pil_image),cv2.COLOR_RGB2BGR)  
         # out.write(img)
 
@@ -138,12 +151,29 @@ def FaceRecognize(know_im, imagefirst):
 try:
     know_im = face_recognition.load_image_file('./image/photo.png')
     imagefirst = face_recognition.load_image_file('./image/request_photo.jpeg')
+    img_src = cv2.imread('./image/request_photo.jpeg',0)
 except Exception as e:
     print(e)
 else:
-    gray = cv2.cvtColor(imagefirst, cv2.COLOR_BGR2GRAY)
+    # pil_image = CalLaplacian(img_src)
+    # # print(pil_image)
+    # pil_image = Image.fromarray(pil_image)
+    # pil_image.show()
+    # pil_image = CalEqualizeHist(img_src)
+    # # print(pil_image)
+    # pil_image = Image.fromarray(pil_image)
+    # pil_image.show()
+
+    # gray = cv2.cvtColor(imagefirst, cv2.COLOR_BGR2GRAY)
+    # gray2 = Image.fromarray(gray)
+    # gray2.show()
+    # imm = Image.fromarray(imagefirst)
+    # imm.show()
     gamma = CalGamma(JudgeBrightness(gray))
     img_gamma = GammaTransformation(imagefirst, gamma)
+    # img_gamma = cv2.cvtColor(img_gamma, cv2.COLOR_BGR2GRAY)
+    img_gamma = Image.fromarray(np.uint8(img_gamma))
+    # img_gamma.show()
     print(str(FaceRecognize(know_im, np.uint8(img_gamma))))
     print(ImageShow(np.uint8(img_gamma)))
 
