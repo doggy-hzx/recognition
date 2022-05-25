@@ -4,6 +4,7 @@ import math
 import numpy as np
 import json
 import torch
+from torch.autograd import Variable
 # %%
 import cv2
 
@@ -150,7 +151,7 @@ def ImageShow(imagefirst):
 
         # pil_image.show()
 
-        res = [leftrightaround, updownaround, around]
+        res = [abs(leftrightaround), abs(updownaround), abs(around)]
 
         return res
 # %%
@@ -177,12 +178,34 @@ def FaceRecognize(know_im, imagefirst):
 #     with open('data.json','w') as da:
 #         json.dump(num,da)
 #     return num
+# %%
+class Net(torch.nn.Module):
+	def __init__(self):
+		super(Net, self).__init__()
+		self.net1 = torch.nn.LSTM(3, 3, 2)
+		self.net2 = torch.nn.Sequential(
+			torch.nn.Linear(3, 30),
+			torch.nn.ReLU(),
+			torch.nn.Linear(30, 5),
+			torch.nn.ReLU(),
+            torch.nn.Linear(5, 1),
+			torch.nn.Sigmoid(),
+		)
+	def forward(self, input):
+		y, w = self.net1(input)
+		y = y.view(3)
+		res = self.net2(y)
+		return res
 
 # %%
 filename = './image'
 flag = 0
-# net = torch.load('./model_action/action.tar')
+action_net = Net()
+action_net = torch.load('./model_action/action.pth')
 
+# print(action_net)
+
+#%%
 for dirname in os.listdir(filename):
     # print(dirname)
     # print(os.path.join(filename, dirname + '/movie'))
@@ -237,7 +260,7 @@ for dirname in os.listdir(filename):
             # d = ImageDraw.Draw(pil_image)
 
             # print(face_landmarks_list)
-            if count % 30 == 0:
+            if count % 300 == 0:
                 try:
                     pil_image = Image.fromarray(frame)
                     img = cv2.cvtColor(np.asarray(pil_image),cv2.COLOR_RGB2BGR)
@@ -249,12 +272,20 @@ for dirname in os.listdir(filename):
                     frame = GammaTransformation(img, gamma)
 
                     res = ImageShow(np.uint8(frame))
-                    print(FaceRecognize(know_im, np.uint8(frame)))
-
-                    print(net(res))
+                    ifself = FaceRecognize(know_im, np.uint8(frame))
+                    print(ifself)
+                    
+                    facex = []
+                    facex.append(res)
+        
+                    if ifself:
+                        facex = np.array(facex, dtype=np.float32)
+                        facex = Variable(torch.from_numpy(facex))
+                        # print(res)
+                        print(action_net(facex.view([1, 1, 3])))
                 except Exception as e:
                     print(e)
-                    continue
+                    # continue
             count = count + 1
 
         # out.release()
