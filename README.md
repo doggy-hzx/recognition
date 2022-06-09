@@ -3,3 +3,5 @@
 有可能dlib不好安装,总之我还是有编译好的dlib版本= =,可以直接用
 更新了动作识别模块，其中通过cv2.VideoCapture模块读取image目录下的movie，这里可以根据需要更改目录
 模块文件命名是GetCsv，至于为啥用这样一个毫无关系的名字，只能说是有历史遗留问题
+网络训练数据集为 faceData.json,需要修改的话直接改就行了
+在faceData文件下运行torch.save(net, "./model_action/action.pth")能够导出网络使用
