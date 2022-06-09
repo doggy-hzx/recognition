@@ -18,7 +18,7 @@ faceYy = np.array(list(faceData['y']), dtype=np.float32)
 # print(faceY)
 
 #%%
-lr = 0.0001
+lr = 0.001
 epoch = 10000
 Batch_Size = 1
 # %%
